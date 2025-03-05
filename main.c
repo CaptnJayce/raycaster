@@ -1,8 +1,11 @@
 #include <math.h>
 #include <raylib.h>
+#include <raymath.h>
 
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 800
+#define P2 PI / 2
+#define P3 3 * PI / 2
 
 struct Player {
   Vector2 pos;
@@ -19,6 +22,7 @@ struct Player {
 int mapX = 10;
 int mapY = 10;
 int mapS = 80;
+// linter messed up the array :(
 int map[] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1,
              1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1,
              1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1,
@@ -37,6 +41,10 @@ void drawMap() {
   }
 }
 
+float dist(float ax, float ay, float bx, float by, float ang) {
+  return(sqrt((bx - ax) * (bx - ax) + (by - ay) * (by -ay)));
+}
+
 void drawRays(struct Player p) {
   int r, mx, my, mp, dof;
   float rx, ry, ra, xo, yo;
@@ -44,7 +52,11 @@ void drawRays(struct Player p) {
   ra = p.pa;
 
   for (r = 0; r < 1; r++) {
+    // Check horizontal lines
     dof = 0;
+    float disH = 10000000;
+    float hx = p.pos.x;
+    float hy = p.pos.y;
     float aTan = -1 / tan(ra);
 
     if (ra > PI) {
@@ -69,6 +81,9 @@ void drawRays(struct Player p) {
       mp = my * mapX + mx;
 
       if (mp > 0 && mp < mapX * mapY && map[mp] == 1) {
+        hx = rx;
+        hy = ry;
+        disH = dist(p.pos.x, p.pos.y, hx, hy, ra);
         dof = 8;
       } else {
         rx += xo;
@@ -77,6 +92,53 @@ void drawRays(struct Player p) {
       }
     }
 
+    // Check vertical lines
+    dof = 0;
+    float disV = 10000000;
+    float vx = p.pos.x;
+    float vy = p.pos.y;
+    float nTan = -tan(ra);
+
+    if (ra > P2 && ra < P3) {
+      rx = (((int)p.pos.x / mapS) * mapS) - 0.0001;
+      ry = (p.pos.x - rx) * nTan + p.pos.y;
+      xo = -mapS;
+      yo = -xo * nTan;
+    } else if (ra < P2 || ra > P3) {
+      rx = (((int)p.pos.x / mapS) * mapS) + mapS;
+      ry = (p.pos.x - rx) * nTan + p.pos.y;
+      xo = mapS;
+      yo = -xo * nTan;
+    } else {
+      ry = p.pos.y;
+      rx = p.pos.x;
+      dof = 8;
+    }
+
+    while (dof < 8) {
+      mx = (int)(rx) / mapS;
+      my = (int)(ry) / mapS;
+      mp = my * mapX + mx;
+
+      if (mp > 0 && mp < mapX * mapY && map[mp] == 1) {
+        vx = rx;
+        vy = ry;
+        disV = dist(p.pos.x, p.pos.y, vx, vy, ra);
+        dof = 8;
+      } else {
+        rx += xo;
+        ry += yo;
+        dof += 1;
+      }
+    }
+    if (disV < disH) {
+      rx = vx;
+      ry = vy;
+    }
+    if (disH < disV) {
+      rx = hx;
+      ry = hy;
+    }
     DrawLine(p.pos.x + 10, p.pos.y + 10, rx, ry, RED);
   }
 }
