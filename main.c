@@ -1,4 +1,5 @@
 #include <raylib.h>
+#include <math.h>
 
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 800
@@ -9,7 +10,11 @@ struct Player {
   int w;
   int h;
   float speed;
-  float rot;
+
+  // for rotation
+  float pdx;
+  float pdy;
+  float pa;
 };
 
 int mapX = 10;
@@ -50,21 +55,32 @@ int main() {
   p.colour = GREEN;
   p.w = 20;
   p.h = 20;
-  p.speed = 400.0;
+  p.speed = 300.0;
 
   while (!WindowShouldClose()) {
-    // update
-    if (IsKeyDown(KEY_W)) {
-      p.pos.y -= p.speed * GetFrameTime();
-    }
-    if (IsKeyDown(KEY_S)) {
-      p.pos.y += p.speed * GetFrameTime();
-    }
     if (IsKeyDown(KEY_A)) {
-      p.pos.x -= p.speed * GetFrameTime();
+      p.pa -= 0.1;
+      if (p.pa < 0) {
+        p.pa += 2*PI;
+      }
+      p.pdx = cos(p.pa) * 5;
+      p.pdy = sin(p.pa) * 5;
     }
     if (IsKeyDown(KEY_D)) {
-      p.pos.x += p.speed * GetFrameTime();
+      p.pa += 0.1;
+      if (p.pa > 2*PI) {
+        p.pa -= 2*PI;
+      }
+      p.pdx = cos(p.pa) * 5;
+      p.pdy = sin(p.pa) * 5;
+    }
+    if (IsKeyDown(KEY_W)) {
+      p.pos.x += p.pdx;
+      p.pos.y += p.pdy;
+    }
+    if (IsKeyDown(KEY_S)) {
+      p.pos.x -= p.pdx;
+      p.pos.y -= p.pdy;
     }
 
     // draw
@@ -73,7 +89,7 @@ int main() {
 
     drawMap();
     DrawRectangle(p.pos.x, p.pos.y, p.w, p.h, p.colour);
-
+    DrawLine(p.pos.x, p.pos.y, p.pos.x+p.pdx*5, p.pos.y+p.pdy*5, RED);
     EndDrawing();
   }
 
