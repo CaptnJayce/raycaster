@@ -6,6 +6,7 @@
 #define SCREEN_HEIGHT 800
 #define P2 PI / 2
 #define P3 3 * PI / 2
+#define DR 0.0174533 //one degree in radians
 
 struct Player {
   Vector2 pos;
@@ -49,9 +50,15 @@ void drawRays(struct Player p) {
   int r, mx, my, mp, dof;
   float rx, ry, ra, xo, yo;
 
-  ra = p.pa;
+  ra = p.pa - DR * 30;
+  if (ra < 0) {
+    ra += 2*PI;
+  }
+  if (ra > 2 * PI) {
+    ra -= 2* PI;
+  }
 
-  for (r = 0; r < 1; r++) {
+  for (r = 0; r < 60; r++) {
     // Check horizontal lines
     dof = 0;
     float disH = 10000000;
@@ -140,6 +147,13 @@ void drawRays(struct Player p) {
       ry = hy;
     }
     DrawLine(p.pos.x + 10, p.pos.y + 10, rx, ry, RED);
+    ra += DR;
+    if (ra < 0) {
+      ra += 2 * PI;
+    }
+    if (ra > 2 * PI) {
+      ra -= 2  * PI;
+    }
   }
 }
 
